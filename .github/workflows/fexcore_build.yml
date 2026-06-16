@@ -1,0 +1,59 @@
+
+name: FEXCore Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout FEX
+        uses: actions/checkout@v4
+        with:
+          repository: ff7161987-cmd/FEX
+          path: FEX
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: |
+          cd FEX
+          chmod +x Scripts/install-deps-ubuntu.sh
+          ./Scripts/install-deps-ubuntu.sh
+
+      - name: Setup LLVM Toolchain
+        run: |
+          cd FEX
+          # Download and setup llvm-mingw toolchain
+          TOOLCHAIN_DIR="/opt/llvm-mingw"
+          LLVM_MINGW_TAG="20251104"
+          LLVM_TAR="llvm.tar.xz"
+
+          if [ ! -d "$TOOLCHAIN_DIR" ]; then
+              curl -L "https://github.com/mstorsjo/llvm-mingw/releases/download/${LLVM_MINGW_TAG}/llvm-mingw-${LLVM_MINGW_TAG}-ucrt-ubuntu-22.04-x86_64.tar.xz" -o "$LLVM_TAR"
+              sudo mkdir -p "$TOOLCHAIN_DIR"
+              sudo tar -C "$TOOLCHAIN_DIR" --strip-components=1 -xJf "$LLVM_TAR"
+              rm "$LLVM_TAR"
+          fi
+          echo "$TOOLCHAIN_DIR/bin" >> $GITHUB_PATH
+
+      - name: Build FEXCore
+        run: |
+          cd FEX
+          mkdir -p build
+          cd build
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_TOOLCHAIN_FILE=../Data/CMake/toolchain_mingw.cmake \
+                -DCMAKE_INSTALL_PREFIX=/usr \
+                -DENABLE_JEMALLOC_GLIBC_ALLOC=False \
+                -DENABLE_LTO=False \
+                -DENABLE_ASSERTIONS=False \
+                -DMINGW_TRIPLE="aarch64-w64-mingw32" \
+                -DBUILD_TESTING=False ..
+          ninja
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fexcore-build-artifacts
+          path: FEX/build
