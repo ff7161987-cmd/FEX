@@ -235,6 +235,16 @@ function(AddDefaultOptionsToTarget Name)
 
   target_compile_options(${Name} PRIVATE
     -Wall
+    -O3 # 1. Otimização agressiva
+    -march=armv8-a+simd # 2. Arquitetura ARMv8-a com SIMD
+    -mtune=cortex-a76 # 3. Tuning para Cortex-A76 (comum em Adreno/Mali)
+    -flto # 4. Link-Time Optimization
+    -ffast-math # 5. Otimizações matemáticas rápidas
+    -fno-strict-aliasing # 6. Permite otimizações de aliasing
+    -fno-math-errno # 7. Ignora erros de errno em funções matemáticas
+    -fno-trapping-math # 8. Desabilita traps em operações matemáticas
+    -fomit-frame-pointer # 9. Otimização de stack frame
+    -fPIC # 10. Position-Independent Code (bom para shared libs)
     -Werror=cast-qual
     -Werror=ignored-qualifiers
     -Werror=implicit-fallthrough
