@@ -16,15 +16,13 @@ on:
         type: string
         description: "Stable only: (e.g. 'FEX-2508, FEX-2508.1'). Empty = latest stable"
 
-  schedule:
-    - cron: "0 17 * * *"
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
+permissions: write-all
 
 env:
   GH_TOKEN:        ${{ github.token }}
